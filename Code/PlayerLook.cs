@@ -17,7 +17,7 @@ public class PlayerLook : MonoBehaviour
         Cursor.visible = false;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         float mouseX = Input.GetAxisRaw("Mouse X") * sensitivity * Time.deltaTime;
         float mouseY = Input.GetAxisRaw("Mouse Y") * sensitivity * Time.deltaTime;
@@ -27,7 +27,18 @@ public class PlayerLook : MonoBehaviour
         xRot -= mouseY;
         xRot = Mathf.Clamp(xRot, -90f, 90f);
 
-        transform.rotation = Quaternion.Euler(xRot, yRot, 0);
+        /* OLD
+        transform.rotation = Quaternion.Slerp(Quaternion.Euler(xRot, yRot, 0));
+        orientation.rotation = Quaternion.Euler(0, yRot, 0);*/
+
+        // Calculate the interpolated rotation using Quaternion.Slerp
+        Quaternion targetQuaternion = Quaternion.Euler(xRot, yRot, 0);
+        Quaternion newRotation = Quaternion.Slerp(transform.rotation, targetQuaternion, Time.deltaTime * sensitivity);
+
+        // Apply the new rotation to the player object
+        transform.rotation = newRotation;
+
+        // Also update the orientation (if needed)
         orientation.rotation = Quaternion.Euler(0, yRot, 0);
     }
 }

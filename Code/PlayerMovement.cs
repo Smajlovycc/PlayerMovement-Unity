@@ -6,6 +6,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed;
+    public float sprintMultiplier;
 
     public float groundDrag;
 
@@ -14,11 +15,11 @@ public class PlayerMovement : MonoBehaviour
     public float airMultiplier;
     bool readyToJump;
 
-    [HideInInspector] public float walkSpeed;
-    [HideInInspector] public float sprintSpeed;
 
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
+    public KeyCode sprintKey = KeyCode.LeftShift;
+
 
     [Header("Ground Check")]
     public float playerHeight;
@@ -29,10 +30,13 @@ public class PlayerMovement : MonoBehaviour
 
     float horizontalInput;
     float verticalInput;
+    float currentMovementSpeed;
 
     Vector3 moveDirection;
 
     Rigidbody rb;
+
+    Vector3 velocity;
 
     private void Start()
     {
@@ -40,12 +44,16 @@ public class PlayerMovement : MonoBehaviour
         rb.freezeRotation = true;
 
         readyToJump = true;
+
+        currentMovementSpeed = moveSpeed;
     }
 
     private void Update()
     {
         // ground check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
+
+
 
         MyInput();
         SpeedControl();
@@ -55,6 +63,8 @@ public class PlayerMovement : MonoBehaviour
             rb.drag = groundDrag;
         else
             rb.drag = 0;
+
+        velocity = rb.velocity;
     }
 
     private void FixedUpdate()
@@ -85,7 +95,7 @@ public class PlayerMovement : MonoBehaviour
 
         // on ground
         if (grounded)
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            rb.AddForce(moveDirection.normalized * currentMovementSpeed * 10f, ForceMode.Force);
 
         // in air
         else if (!grounded)
@@ -94,13 +104,30 @@ public class PlayerMovement : MonoBehaviour
 
     private void SpeedControl()
     {
+        HandleSprint();
+
         Vector3 flatVel = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
 
         // limit velocity if needed
-        if (flatVel.magnitude > moveSpeed)
+        if (flatVel.magnitude > currentMovementSpeed)
         {
-            Vector3 limitedVel = flatVel.normalized * moveSpeed;
+            Vector3 limitedVel = flatVel.normalized * currentMovementSpeed;
             rb.velocity = new Vector3(limitedVel.x, rb.velocity.y, limitedVel.z);
+        }
+    }
+
+    private void HandleSprint()
+    {
+        print("Handling...");
+        if (Input.GetKey(sprintKey))
+        {
+            print("sprinting..");
+            currentMovementSpeed = moveSpeed * sprintMultiplier;
+        }
+        else
+        {
+            print("walking");
+            currentMovementSpeed = moveSpeed;
         }
     }
 
